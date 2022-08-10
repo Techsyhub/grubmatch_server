@@ -7,6 +7,7 @@ const appRouter= (app) => {
     app.post("/getNewJoinee", getNewJoinee);
     app.post("/matchLike", matchLike);
     app.post("/isAllRecordMatch", isAllRecordMatch)
+    app.post("/", (req,res)=> res.send("hello"))
 }
 
 module.exports = appRouter
