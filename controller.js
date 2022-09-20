@@ -39,8 +39,8 @@ const createRoomController = async  (req, res) => {
       YELP_CLIENT
         .search({
           term: "food",
-          longitude: location.longitude|| -89.5,
-          latitude: location.latitude || 44.5,
+          longitude: location.longitude,
+          latitude: location.latitude ,
         })
         .then(async(response) => {
           var apiData = response.jsonBody;
@@ -51,8 +51,8 @@ const createRoomController = async  (req, res) => {
             radius,
             code,
             location: {
-              longitude: location.longitude|| -89.5,
-              latitude: location.latitude || 44.5,
+              longitude: location.longitude,
+              latitude: location.latitude,
             },
             resturentData: apiData,
             userList:[{name, deviceId , host:true}]
