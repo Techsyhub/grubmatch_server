@@ -28,7 +28,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 app.get('/', function (req, res) {
-  res.send('hello, world!')
+  res.send('hello, world! welcome to grubmatch')
 })
 appRouter(app)
 
