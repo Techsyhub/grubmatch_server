@@ -5,6 +5,32 @@ const config = require("./config");
 
 const YELP_CLIENT = yelp.client(config.YELP_KEY );
 
+const generateCode =(res)=>{
+  const code= Math.floor(100000 + Math.random() * 900000)
+  let a ="000000"
+  createRoom.find({code:code})
+  .exec((err, doc)=>{
+    if(err){ 
+      console.log(1, error)
+      res.json({
+        error:err,
+        message:"Database error"
+      })
+    }
+    else if (doc && doc[0]){
+      console.log(2, doc)
+      generateCode(res)
+    }else{
+      res.json({code:code})
+    }
+  })
+
+  console.log("11111111111111",a)
+}
+const createCode = async (req, res)=>{
+  generateCode(res) 
+}
+
 const createRoomController = async  (req, res) => {
     try {
       console.log("hello from create room controller")
@@ -62,43 +88,50 @@ const createRoomController = async  (req, res) => {
   }
 
  const joinRoomController = async (req, res) => {
-  const{name, code, roomId, deviceId}= req.body;
+  const{name, code,  deviceId}= req.body;
    
     try{
-      if (!code || !name || !roomId || !deviceId) {
+      if (!code || !name || !deviceId) {
         res.send("Please Fill The Input Correctly");
       } else {
-        let result = await createRoom.findById(roomId);
-        if(!result){
+        let result = await createRoom.find({code:code});
+        console.log("==================",result)
+        if(result && result[0]){
+          result= result[0]
+          console.log(result.code, code, typeof result.code , typeof code, result.code===code)
+          if(result.code !== code){
+            res.json({
+              error:"Invalid Code"
+            });
+          
+          }else{
+          
+           const isUserExist = result.userList.find(item => item.deviceId=== deviceId)
+           if(isUserExist){
+
+            res.json({
+              error:"User already exist"
+            })
+           }else{
+            let userList= result.userList
+            userList.push({deviceId, host:false, name})
+            let updateRoom= await createRoom.updateOne({code: code}, { userList });
+            if(updateRoom.acknowledged){
+              result.userList= userList;
+              res.json({
+                message:"Join Room Successfully",
+                data:result,
+                error:false
+              })
+            }
+           }     
+          }
+        }else{
           res.json({
             error:"The session has been expired"
           })
         }
-        if(result.code !== code){
-          res.json({
-            error:"Invalid Code"
-          });
         
-        }else{
-         const isUserExist = result.userList.find(item => item.deviceId=== deviceId)
-         if(isUserExist){
-          res.json({
-            error:"User already exist"
-          })
-         }else{
-          let userList= result.userList
-          userList.push({deviceId, host:false, name})
-          let updateRoom= await createRoom.updateOne({ _id: roomId}, { userList });
-          if(updateRoom.acknowledged){
-            result.userList= userList;
-            res.json({
-              message:"Join Room Successfully",
-              data:result,
-              error:false
-            })
-          }
-         }     
-        }
       }
     }catch(error){
       console.log(error)
@@ -194,32 +227,65 @@ const createRoomController = async  (req, res) => {
         res.json({
           error:"The session has been expired"
         })
-      }
-      //search user in match list if found update record if not found add record
-      let found = false
-      for (const iterator of result.matchList) {
-        if(iterator.id === deviceId){
-          iterator.restaurant = restaurant
-          found= true
-        }
-      }
-      if(!found){
-        result.matchList.push({deviceId, restaurant})
-      }      
+      }else{
+  //search user in match list if found update record if not found add record
+  let found = false
+  for (const iterator of result.matchList) {
+    if(iterator.id === deviceId){
+      iterator.restaurant = restaurant
+      found= true
+    }
+  }
+  if(!found){
+    result.matchList.push({deviceId, restaurant})
+  }      
 
-      //update record in  db
-     let updateRoom= await createRoom.updateOne({ _id: roomId},{matchList:result.matchList});
-     if(updateRoom.acknowledged){
-       res.json({
-         data:result,
-         error:false
-       })
-     }
+  //update record in  db
+ let updateRoom= await createRoom.updateOne({ _id: roomId},{matchList:result.matchList});
+ if(updateRoom.acknowledged){
+   res.json({
+     data:result,
+     error:false
+   })
+ }
+      }
+    
 
     }
 
   }
 
+  
+  const leaveRoom = async (req,res)=>{
+    const{roomId, deviceId}= req.body;
+    if (!roomId || !deviceId) {
+      res.json({"error":"Please Fill The Input Correctly"});
+    } else {
+      let result = await createRoom.findById(roomId);
+      if(!result){
+        res.json({
+          error:"The session has been expired"
+        })
+      }else{
+        console.log(result.userList)
+        let userList = result.userList.filter( item => item.deviceId !==deviceId)
+        console.log(userList)
+        createRoom.update({_id:roomId},{userList:userList})
+        .exec((err, doc)=>{
+          console.log({doc,err})
+          if(doc){
+            res.json({message:"you left the room"})
+          }
+          else if(err){
+            res.json({error:err})
+          }
+        })
+      }
+    }
+    
+  }
+
+ 
   module.exports={
-    createRoomController, joinRoomController, getNewJoinee, matchLike, isAllRecordMatch
+    createRoomController, joinRoomController, getNewJoinee, matchLike, isAllRecordMatch, createCode, leaveRoom
   }

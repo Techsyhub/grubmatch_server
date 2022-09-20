@@ -6,7 +6,7 @@ const config = require("./config");
 const appRouter= require("./route");
 
 const app = express();
-const port = config.PORT;
+const port = process.env.PORT || config.PORT;
 
 
 mongoose
@@ -28,7 +28,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 app.get('/', function (req, res) {
-  res.send('hello, world! welcome to grubmatch')
+  res.send('hello, world! Grubmatch is alive')
 })
 appRouter(app)
 

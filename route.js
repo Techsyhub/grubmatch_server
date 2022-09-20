@@ -1,4 +1,4 @@
-const {createRoomController, joinRoomController, getNewJoinee, matchLike, isAllRecordMatch} = require("./controller")
+const {createRoomController, joinRoomController, leaveRoom, getNewJoinee, createCode, matchLike, isAllRecordMatch} = require("./controller")
 
 const appRouter= (app) => {
     
@@ -7,6 +7,8 @@ const appRouter= (app) => {
     app.post("/getNewJoinee", getNewJoinee);
     app.post("/matchLike", matchLike);
     app.post("/isAllRecordMatch", isAllRecordMatch)
+    app.get("/createCode", createCode)
+    app.post("/leaveRoom", leaveRoom)
     app.post("/", (req,res)=> res.send("hello"))
 }
 
