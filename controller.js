@@ -6,8 +6,8 @@ const config = require("./config");
 const YELP_CLIENT = yelp.client(config.YELP_KEY );
 
 const generateCode =(res)=>{
-  const code= Math.floor(100000 + Math.random() * 900000)
-  let a ="000000"
+  const code= Math.floor(10000 + Math.random() * 90000)
+ 
   createRoom.find({code:code})
   .exec((err, doc)=>{
     if(err){ 
