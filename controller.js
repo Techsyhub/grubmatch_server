@@ -25,7 +25,7 @@ const generateCode =(res)=>{
     }
   })
 
-  console.log("11111111111111",a)
+
 }
 const createCode = async (req, res)=>{
   generateCode(res) 
@@ -33,9 +33,8 @@ const createCode = async (req, res)=>{
 
 const createRoomController = async  (req, res) => {
     try {
-      console.log("hello from create room controller")
+    
       const{ name, zip, radius, code , location, deviceId }= req.body
-      console.log(req.body)
       YELP_CLIENT
         .search({
           term: "food",
@@ -56,8 +55,6 @@ const createRoomController = async  (req, res) => {
             },
             resturentData: apiData,
             userList:[{name, deviceId , host:true}]
-
-
           }
           const Data =  new createRoom(obj);
           const Room= await Data.save();
@@ -95,7 +92,7 @@ const createRoomController = async  (req, res) => {
         res.send("Please Fill The Input Correctly");
       } else {
         let result = await createRoom.find({code:code});
-        console.log("==================",result)
+
         if(result && result[0]){
           result= result[0]
           console.log(result.code, code, typeof result.code , typeof code, result.code===code)
@@ -144,7 +141,7 @@ const createRoomController = async  (req, res) => {
     // res.send("hello from get new joinee")
     // console.log("get ")
     // get code and session id check if the room exist
-    const{roomId, deviceId}= req.body;
+    const{roomId, deviceId, userList}= req.body;
     if (!roomId || !deviceId) {
       res.json({"error":"Please Fill The Input Correctly"});
     } else {
@@ -157,6 +154,32 @@ const createRoomController = async  (req, res) => {
       findUser= result.userList.find(item=>item.deviceId ===deviceId)
       console.log(result)
       if(findUser){
+        let temp =[]
+      
+        let allRecord= result.userList.concat(userList);
+
+        // allRecord.foreach(a_user=>{
+        //   let found = false;
+        //     result.userList.foreach(()=>{
+
+        //     })
+           
+        //     })
+        // })
+          
+      //   result.userList.forEach((dbUsers)=>{
+      //     userList.forEach((users)=> {
+
+      //       if(dbUsers.)
+      // }
+      //   }
+        
+      // ));
+
+
+
+
+
        res.json({
         userList:result.userList
        })
@@ -194,7 +217,10 @@ const createRoomController = async  (req, res) => {
           }
         }
         if(count=== result.matchList.length){
-          res.json({message:"matched"})
+          res.json({
+            message:"matched",
+            restaurant:result.matchList[0].restaurant
+          })
         }else{
           res.json({
             error :false
