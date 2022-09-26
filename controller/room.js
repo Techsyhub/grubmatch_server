@@ -320,7 +320,7 @@ const createRoomController = async  (req, res) => {
           if(doc){
             sendNotification({
               title:'Grubmatch',
-              text: name+ ' left the room!',
+              text: leftUser+ ' left the room!',
               fcmTokenList:result.fcmTokenList
             })
             res.json({message:"you left the room"})
