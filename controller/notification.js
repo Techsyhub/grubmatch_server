@@ -2,6 +2,7 @@ const config= require('../config')
 const fetch = require('node-fetch')
 const sendNotification=({title, text, fcmTokenList})=>{
 
+
     const notificationBody={
         'notification': {
             'title':title,
@@ -9,6 +10,7 @@ const sendNotification=({title, text, fcmTokenList})=>{
         },
         'registration_ids':fcmTokenList
     }
+    console.log(notificationBody)
 
     fetch('https://fcm.googleapis.com/fcm/send',{
         'method':'POST',
