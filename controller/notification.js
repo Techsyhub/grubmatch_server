@@ -4,11 +4,11 @@ const sendNotification=({title, text, fcmTokenList})=>{
 
 
     const notificationBody={
-        'notification': {
-            'title':title,
-            'text':text,
+        notification: {
+            title:title,
+            text:text,
         },
-        'registration_ids':fcmTokenList
+        registration_ids:fcmTokenList
     }
     console.log(notificationBody)
 
