@@ -10,7 +10,7 @@ const sendNotification=({title, text, fcmTokenList})=>{
         'registration_ids':fcmTokenList
     }
 
-    fetch('https://fcm.googleapis/com/fcm/send',{
+    fetch('https://fcm.googleapis.com/fcm/send',{
         'method':'POST',
         'headers':{
             'Authorization':'key='+config.FIREBASE_SERVER_KEY
