@@ -28,7 +28,7 @@ const roomSchema = new mongoose.Schema({
     required:true  
   },
   fcmTokenList:{
-    type:Object,
+    type:Array,
     required:true,
     default:[]
   },

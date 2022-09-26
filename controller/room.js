@@ -96,7 +96,7 @@ const createRoomController = async  (req, res) => {
   const{name, code,  deviceId, fcm_token}= req.body;
    
     try{
-      if (!code || !name || !deviceId) {
+      if (!code || !name || !deviceId || !fcm_token) {
         res.send("Please Fill The Input Correctly");
       } else {
         let result = await createRoom.find({code:code});
