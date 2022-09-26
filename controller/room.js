@@ -120,8 +120,11 @@ const createRoomController = async  (req, res) => {
            }else{
             let userList= result.userList
             userList.push({deviceId, host:false, name})
-            let fcmTokenList= result.fcmTokenList.push(fcm_token)
-            let updateRoom= await createRoom.updateOne({code: code}, { userList ,fcmTokenList});
+            console.log("a===",result.fcmTokenList)
+            let fcmTokenList= result.fcmTokenList
+            fcmTokenList.push(fcm_token)
+            console.log("b==",fcmTokenList, fcm_token)
+            let updateRoom= await createRoom.updateOne({code: code}, { userList});
             if(updateRoom.acknowledged){
               sendNotification({
                 title:'Grubmatch',
