@@ -130,7 +130,7 @@ const createRoomController = async  (req, res) => {
             sendNotification({
                 title:"Grubmatch",
                 text: name+ " joined the room!",
-                fcmTokenList:fcm_token
+                fcmTokenList:fcmTokenList
               },()=>{
                 result.userList= userList;
                 res.json({
