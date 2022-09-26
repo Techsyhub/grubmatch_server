@@ -18,8 +18,8 @@ const sendNotification=({title, text, fcmTokenList})=>{
             'Authorization':'key='+config.FIREBASE_SERVER_KEY
         },
         'body':JSON.stringify(notificationBody)
-    }).then(()=>{
-        console.log("notification sent successfully")
+    }).then((data)=>{
+        console.log("notification sent successfully",{data})
     }).catch((error)=>{
         console.log("notification error:", error)
     })

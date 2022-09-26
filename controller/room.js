@@ -126,17 +126,19 @@ const createRoomController = async  (req, res) => {
             console.log("b==",fcmTokenList, fcm_token)
             let updateRoom= await createRoom.updateOne({code: code}, { userList});
             if(updateRoom.acknowledged){
-              sendNotification({
+            sendNotification({
                 title:'Grubmatch',
-                text: name+ ' joined the \room!',
+                text: name+ ' joined the room!',
                 fcmTokenList:result.fcmTokenList
+              },()=>{
+                result.userList= userList;
+                res.json({
+                  message:"Join Room Successfully",
+                  data:result,
+                  error:false
+                })
               })
-              result.userList= userList;
-              res.json({
-                message:"Join Room Successfully",
-                data:result,
-                error:false
-              })
+             
             }
            }     
           }
@@ -328,11 +330,12 @@ const createRoomController = async  (req, res) => {
           console.log({doc,err})
           if(doc){
             sendNotification({
-              title:'Grubmatch',
-              text: leftUser+ ' left the room!',
-              fcmTokenList:result.fcmTokenList
+              title:"Grubmatch",
+              text: leftUser+ " left the room!",
+              fcmTokenList:result.fcmTokenList.toString()
+            },()=>{
+              res.json({message:"you left the room"})
             })
-            res.json({message:"you left the room"})
           }
           else if(err){
             res.json({error:err})
