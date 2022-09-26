@@ -36,7 +36,10 @@ const createRoomController = async  (req, res) => {
     try {
     
       const{ name, zip, radius, code , location, deviceId,fcm_token }= req.body
-      YELP_CLIENT
+      if(!name, !zip, !radius, !code , !location.longitude, !deviceId,!fcm_token){
+        res.json({error:"Required fields are missing"})
+      }else{
+        YELP_CLIENT
         .search({
           term: "food",
           longitude: location.longitude,
@@ -76,6 +79,9 @@ const createRoomController = async  (req, res) => {
           res.json(responce);
         
         });
+
+      }
+    
     } catch (error) {
       console.log("errror", error)
       const responce = {
