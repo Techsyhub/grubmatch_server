@@ -1,7 +1,8 @@
 const yelp = require("yelp-fusion");
-const createRoom = require("./models/room");
-const joinRoom = require("./models/user");
-const config = require("./config");
+const createRoom = require("../models/room");
+const joinRoom = require("../models/user");
+const config = require("../config");
+const {sendNotification}= require("./notification")
 
 const YELP_CLIENT = yelp.client(config.YELP_KEY );
 
@@ -34,7 +35,7 @@ const createCode = async (req, res)=>{
 const createRoomController = async  (req, res) => {
     try {
     
-      const{ name, zip, radius, code , location, deviceId }= req.body
+      const{ name, zip, radius, code , location, deviceId,fcm_token }= req.body
       YELP_CLIENT
         .search({
           term: "food",
@@ -49,6 +50,7 @@ const createRoomController = async  (req, res) => {
             zip,  
             radius,
             code,
+            fcmTokenList:[fcm_token],
             location: {
               longitude: location.longitude,
               latitude: location.latitude,
@@ -85,7 +87,7 @@ const createRoomController = async  (req, res) => {
   }
 
  const joinRoomController = async (req, res) => {
-  const{name, code,  deviceId}= req.body;
+  const{name, code,  deviceId, fcm_token}= req.body;
    
     try{
       if (!code || !name || !deviceId) {
@@ -112,8 +114,14 @@ const createRoomController = async  (req, res) => {
            }else{
             let userList= result.userList
             userList.push({deviceId, host:false, name})
-            let updateRoom= await createRoom.updateOne({code: code}, { userList });
+            let fcmTokenList= result.fcmTokenList.push(fcm_token)
+            let updateRoom= await createRoom.updateOne({code: code}, { userList ,fcmTokenList});
             if(updateRoom.acknowledged){
+              sendNotification({
+                title:'Grubmatch',
+                text: name+ ' joined the \room!',
+                fcmTokenList:result.fcmTokenList
+              })
               result.userList= userList;
               res.json({
                 message:"Join Room Successfully",
@@ -294,12 +302,27 @@ const createRoomController = async  (req, res) => {
         })
       }else{
         console.log(result.userList)
-        let userList = result.userList.filter( item => item.deviceId !==deviceId)
+        let leftUser="", leftUserIndex=-1
+
+        for (let index = 0; index <  result.userList.length; index++) {
+          const element =  result.userList[index];
+          if(element.deviceId===deviceId){
+            leftUser=element.name;
+            leftUserIndex= index
+          }
+          
+        }     
+        let userList = result.userList.splice(1,leftUserIndex)
         console.log(userList)
         createRoom.update({_id:roomId},{userList:userList})
         .exec((err, doc)=>{
           console.log({doc,err})
           if(doc){
+            sendNotification({
+              title:'Grubmatch',
+              text: name+ ' left the room!',
+              fcmTokenList:result.fcmTokenList
+            })
             res.json({message:"you left the room"})
           }
           else if(err){

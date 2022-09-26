@@ -1,4 +1,4 @@
-const {createRoomController, joinRoomController, leaveRoom, getNewJoinee, createCode, matchLike, isAllRecordMatch} = require("./controller")
+const {createRoomController, joinRoomController, leaveRoom, getNewJoinee, createCode, matchLike, isAllRecordMatch} = require("./controller/room")
 
 const appRouter= (app) => {
     
