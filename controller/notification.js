@@ -1,6 +1,6 @@
 const config= require('../config')
 const fetch = require('node-fetch')
-const sendNotification=({title, text, fcmTokenList})=>{
+const sendNotification=({title, text, fcmTokenList},cb)=>{
 
 
     const notificationBody={
@@ -19,6 +19,7 @@ const sendNotification=({title, text, fcmTokenList})=>{
         },
         'body':JSON.stringify(notificationBody)
     }).then((data)=>{
+        cb();
         console.log("notification sent successfully",{data})
     }).catch((error)=>{
         console.log("notification error:", error)
