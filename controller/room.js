@@ -226,30 +226,32 @@ const createRoomController = async  (req, res) => {
         res.json({
           error:"The session has been expired"
         })
-      }
-      let count =0
+      }else{
+        let count =0
 
-      if(result.matchList.length>0){
-        for (const iterator of result.matchList) {
-          if(iterator.restaurant.id === result.matchList[0].restaurant.id){
-            count++;
+        if(result.matchList.length>0){
+          for (const iterator of result.matchList) {
+            if(iterator.restaurant.id === result.matchList[0].restaurant.id){
+              count++;
+            }
           }
-        }
-        if(count=== result.matchList.length){
-          res.json({
-            message:"matched",
-            restaurant:result.matchList[0].restaurant
-          })
+          if(count=== result.matchList.length){
+            res.json({
+              message:"matched",
+              restaurant:result.matchList[0].restaurant
+            })
+          }else{
+            res.json({
+              error :false
+            })
+          }
         }else{
           res.json({
             error :false
           })
         }
-      }else{
-        res.json({
-          error :false
-        })
       }
+     
       
       
     }
