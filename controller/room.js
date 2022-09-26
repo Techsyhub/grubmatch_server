@@ -128,8 +128,7 @@ const createRoomController = async  (req, res) => {
             
             if(updateRoom.acknowledged){
             sendNotification({
-                title:"Grubmatch",
-                text: name+ " joined the room!",
+                title: name+ " joined the room!",
                 fcmTokenList:fcmTokenList
               },()=>{
                 result.userList= userList;
