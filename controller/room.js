@@ -229,7 +229,7 @@ const createRoomController = async  (req, res) => {
       }else{
         let count =0
 
-        if(result.matchList.length>0){
+        if(result.matchList.length>1){
           for (const iterator of result.matchList) {
             if(iterator.restaurant.id === result.matchList[0].restaurant.id){
               count++;
@@ -278,7 +278,8 @@ const createRoomController = async  (req, res) => {
   //search user in match list if found update record if not found add record
   let found = false
   for (const iterator of result.matchList) {
-    if(iterator.id === deviceId){
+    console.log(iterator, deviceId)
+    if(iterator.deviceId === deviceId){
       iterator.restaurant = restaurant
       found= true
     }
@@ -287,7 +288,9 @@ const createRoomController = async  (req, res) => {
     result.matchList.push({deviceId, restaurant})
   }      
 
-  //update record in  db
+  res.json({found, result})
+
+  // update record in  db
  let updateRoom= await createRoom.updateOne({ _id: roomId},{matchList:result.matchList});
  if(updateRoom.acknowledged){
    res.json({
@@ -325,9 +328,19 @@ const createRoomController = async  (req, res) => {
           }
           
         }     
-        let userList = result.userList.splice(1,leftUserIndex)
-        console.log(userList)
-        createRoom.update({_id:roomId},{userList:userList})
+        let userList = result.matchList.splice(1,leftUserIndex)
+
+        for (let index = 0; index <  result.matchList.length; index++) {
+          const element =  result.matchList[index];
+          if(element.deviceId===deviceId){
+            leftUser=element.name;
+            leftUserIndex= index
+          }
+          
+        }     
+        let matchList = result.matchList.splice(1,leftUserIndex)
+        console.log(matchList)
+        createRoom.update({_id:roomId},{userList:userList, matchList:matchList})
         .exec((err, doc)=>{
           console.log({doc,err})
           if(doc){
