@@ -307,8 +307,8 @@ const createRoomController = async  (req, res) => {
 
   
   const leaveRoom = async (req,res)=>{
-    const{roomId, deviceId}= req.body;
-    if (!roomId || !deviceId) {
+    const{roomId, deviceId, fcmToken}= req.body;
+    if (!roomId || !deviceId || !fcmToken) {
       res.json({"error":"Please Fill The Input Correctly"});
     } else {
       let result = await createRoom.findById(roomId);
@@ -318,7 +318,7 @@ const createRoomController = async  (req, res) => {
         })
       }else{
         console.log(result.userList)
-        let leftUser="", leftUserIndex=-1
+        let leftUser="", leftUserIndex=-1 ;
 
         for (let index = 0; index <  result.userList.length; index++) {
           const element =  result.userList[index];
@@ -339,8 +339,10 @@ const createRoomController = async  (req, res) => {
           
         }     
         let matchList = result.matchList.splice(1,leftUserIndex)
+        let fcmTokenList = result.fcmTokenList.filter(item => item !== fcmToken)
+
         console.log(matchList)
-        createRoom.update({_id:roomId},{userList:userList, matchList:matchList})
+        createRoom.update({_id:roomId},{userList:userList, matchList:matchList, fcmTokenList: fcmTokenList})
         .exec((err, doc)=>{
           console.log({doc,err})
           if(doc){
