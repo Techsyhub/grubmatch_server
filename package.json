@@ -16,7 +16,7 @@
     "mongoose": "^6.4.2",
     "node-fetch": "^2.6.1",
     "nodemon": "^2.0.19",
-    "socket.io": "^4.5.1",
+    "socket.io": "^4.5.3",
     "yelp-fusion": "^3.0.0"
   }
 }
