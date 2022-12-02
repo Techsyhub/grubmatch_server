@@ -5,50 +5,32 @@ var mongoose = require("mongoose");
 const config = require("./config");
 const { Server } = require("socket.io")
 const Room = require("./models/room");
+const router= express.Router();
 const { sendNotification } = require("./controller/notification")
+const yelp = require("yelp-fusion");
 
 const server = http.createServer(app)
 const io = new Server(server);
+
+
+const YELP_CLIENT = yelp.client(config.YELP_KEY );
 
 const port = process.env.PORT || 4000;
 app.get("/", (req, res) => {
   res.send("hello world");
 })
 
+app.use(express.json())
+
+
 mongoose
   .connect(config.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log("Mongodb connected"))
   .catch((e) => console.log("Mongodb connection error", e));
 
-io.on("connection", socket => {
-  console.log("a user connected")
-
-
-
-  const generateCode = (data) => {
-
-    const code = Math.floor(10000 + Math.random() * 90000)
-    console.log("run", Room)
-    Room.find({ code: code })
-      .exec((err, doc) => {
-        if (err) {
-          console.log(err)
-        }
-        else if (doc && doc[0]) {
-          generateCode(data)
-        }
-        else {
-
-          socket.emit("getCode" + data, code)
-        }
-      })
-  }
-  socket.on("createCode", data => {
-    generateCode(data)
-  })
 
   app.post("/createRoom", async (req, res) => {
-    console.log(req.query)
+    // console.log(req.query)
 
     try {
 
@@ -79,19 +61,19 @@ io.on("connection", socket => {
               userList: [{ name, deviceId, host: true }]
             }
 
-            const Data = new createRoom(obj);
-            const Room = await Data.save();
+            const Data = new Room(obj);
+            const roomData = await Data.save();
 
             const responce = {
               message: "create",
               error: false,
-              data: Room,
+              data: roomData,
             };
 
             res.json(responce);
-
           })
           .catch((error) => {
+            console.log(error)
             const responce = {
               error: true,
               error: error,
@@ -119,7 +101,7 @@ io.on("connection", socket => {
       if (!code || !name || !deviceId || !fcm_token) {
         res.send("Please Fill The Input Correctly");
       } else {
-        let result = await createRoom.find({ code: code });
+        let result = await Room.find({ code: code });
 
         if (result && result[0]) {
           result = result[0]
@@ -144,7 +126,9 @@ io.on("connection", socket => {
               let fcmTokenList = result.fcmTokenList
               fcmTokenList.push(fcm_token)
 
-              let updateRoom = await createRoom.updateOne({ code: code }, { userList, fcmTokenList });
+              let updateRoom = await Room.updateOne({ code: code }, { userList, fcmTokenList });
+
+
               // io.on("connection", async (socket) => {
               //   socket.join(Room._id);
 
@@ -187,7 +171,7 @@ io.on("connection", socket => {
     if (!roomId || !deviceId || !fcmToken) {
       res.json({ "error": "Please Fill The Input Correctly" });
     } else {
-      let result = await createRoom.findById(roomId);
+      let result = await Room.findById(roomId);
       if (!result) {
         res.json({
           error: "The session has been expired"
@@ -218,7 +202,7 @@ io.on("connection", socket => {
         let fcmTokenList = result.fcmTokenList.filter(item => item !== fcmToken)
 
         console.log(matchList)
-        createRoom.update({ _id: roomId }, { userList: userList, matchList: matchList, fcmTokenList: fcmTokenList })
+        Room.update({ _id: roomId }, { userList: userList, matchList: matchList, fcmTokenList: fcmTokenList })
           .exec((err, doc) => {
             console.log({ doc, err })
             if (doc) {
@@ -242,26 +226,54 @@ io.on("connection", socket => {
   app.post("/isSessionExpire",async(req,res)=>{
 
     try {
-      const { roomId, deviceId} = data;
-      if (!roomId || !deviceId) {
+      const { roomId} = req.body;
+      if (!roomId) {
         throw "Please Fill The Input Correctly"
       } else {
-        let result = await createRoom.findById(roomId);
+        let result = await Room.findById(roomId);
         if (!result) {
-          throw "The session has been expired"
+         res.json({expire:true})
         }else{
-          res.json({
-            error :false,
-            room: result
-          })
+          res.json({expire:false, room:result})
         }
     }
     } catch (error) {
-      socket.emit("error"+deviceId, error)
+      console.log(error)
+        res.json({
+          error:error
+        })
     }
    
 
   })
+
+io.on("connection", socket => {
+  console.log("a user connected")
+
+
+
+  const generateCode = (data) => {
+
+    const code = Math.floor(10000 + Math.random() * 90000)
+    console.log("run", Room)
+    Room.find({ code: code })
+      .exec((err, doc) => {
+        if (err) {
+          console.log(err)
+        }
+        else if (doc && doc[0]) {
+          generateCode(data)
+        }
+        else {
+
+          socket.emit("getCode" + data, code)
+        }
+      })
+  }
+  socket.on("createCode", data => {
+    generateCode(data)
+  })
+
 
 
   socket.on("likeCard", async (data) => {
@@ -273,7 +285,7 @@ io.on("connection", socket => {
       if (!roomId || !deviceId || !restaurant.id) {
         throw "Please Fill The Input Correctly"
       } else {
-        let result = await createRoom.findById(roomId);
+        let result = await Room.findById(roomId);
         if (!result) {
           throw "The session has been expired"
         } else {
@@ -290,7 +302,7 @@ io.on("connection", socket => {
             result.matchList.push({ deviceId, restaurant })
           } else {
             // update record in  db
-            let updateRoom = await createRoom.updateOne({ _id: roomId }, { matchList: result.matchList });
+            let updateRoom = await Room.updateOne({ _id: roomId }, { matchList: result.matchList });
             if (updateRoom.acknowledged) {
               //  res.json({
               //    data:result,
@@ -320,5 +332,5 @@ io.on("connection", socket => {
 })
 
 server.listen(port, () => {
-  console.log("server is running on 3000")
+  console.log("server is running on"+port)
 })

@@ -36,74 +36,74 @@ function socketController(io){
   this.createRoomController = async  (req, res) => {
     console.log(req.query)
  
-    // try {
+    try {
     
-    //   const{ name, zip, radius, code , location, deviceId,fcm_token }= req.body
-    //   if(!name, !zip, !radius, !code , !location.longitude, !deviceId,!fcm_token){
-    //     res.json({error:"Required fields are missing"})
-    //   }else{
-    //     YELP_CLIENT
-    //     .search({
-    //       term: "food",
-    //       longitude: location.longitude,
-    //       latitude: location.latitude ,
-    //     })
-    //     .then(async(response) => {
-    //       var apiData = response.jsonBody;
+      const{ name, zip, radius, code , location, deviceId,fcm_token }= req.body
+      if(!name, !zip, !radius, !code , !location.longitude, !deviceId,!fcm_token){
+        res.json({error:"Required fields are missing"})
+      }else{
+        YELP_CLIENT
+        .search({
+          term: "food",
+          longitude: location.longitude,
+          latitude: location.latitude ,
+        })
+        .then(async(response) => {
+          var apiData = response.jsonBody;
         
-    //       const obj ={
-    //         name,    
-    //         zip,  
-    //         radius,
-    //         code,
-    //         fcmTokenList:[fcm_token],
-    //         location: {
-    //           longitude: location.longitude,
-    //           latitude: location.latitude,
-    //         },
-    //         resturentData: apiData,
-    //         userList:[{name, deviceId , host:true}]
-    //       }
+          const obj ={
+            name,    
+            zip,  
+            radius,
+            code,
+            fcmTokenList:[fcm_token],
+            location: {
+              longitude: location.longitude,
+              latitude: location.latitude,
+            },
+            resturentData: apiData,
+            userList:[{name, deviceId , host:true}]
+          }
           
-    //       const Data =  new createRoom(obj);
-    //       const Room= await Data.save();
+          const Data =  new createRoom(obj);
+          const Room= await Data.save();
 
 
-    //       // create a socket room so that only the room person can get that message
-    //       io.on("connection", async (socket) => {
-    //         const responce = {
-    //           message: "create",
-    //           error: false,
-    //           data: Room,
-    //         };
-    //         socket.join(Room._id);
+          // create a socket room so that only the room person can get that message
+          io.on("connection", async (socket) => {
+            const responce = {
+              message: "create",
+              error: false,
+              data: Room,
+            };
+            socket.join(Room._id);
           
-    //         // and then later
-    //         io.to(Room).emit(response);
-    //         res.json(responce);
-    //       });
+            // and then later
+            io.to(Room).emit(response);
+            res.json(responce);
+          });
         
          
-    //     })
-    //     .catch((error) => {
-    //       const responce = {
-    //         error: true,
-    //         error: error,
-    //       };
-    //       res.json(responce);
+        })
+        .catch((error) => {
+          const responce = {
+            error: true,
+            error: error,
+          };
+          res.json(responce);
         
-    //     });
+        });
 
-    //   }
+      }
     
-    // } catch (error) {
-    //   console.log("errror", error)
-    //   const responce = {
-    //     error: true,
-    //     error: error,
-    //   };
-    //   res.json(responce);
-    // }
+    } catch (error) {
+      console.log("errror", error)
+      const responce = {
+        error: true,
+        error: error,
+      };
+      res.json(responce);
+    }
   }
 
  this.joinRoomController = async (req, res) => {
