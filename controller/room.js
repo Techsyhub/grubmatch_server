@@ -4,95 +4,109 @@ const joinRoom = require("../models/user");
 const config = require("../config");
 const {sendNotification}= require("./notification")
 
-const YELP_CLIENT = yelp.client(config.YELP_KEY );
-
-const generateCode =(res)=>{
-  const code= Math.floor(10000 + Math.random() * 90000)
+function socketController(io){
+  // console.log(io)
  
-  createRoom.find({code:code})
-  .exec((err, doc)=>{
-    if(err){ 
-      console.log(1, error)
-      res.json({
-        error:err,
-        message:"Database error"
-      })
-    }
-    else if (doc && doc[0]){
-      console.log(2, doc)
-      generateCode(res)
-    }else{
-      res.json({code:code})
-    }
-  })
-
-
-}
-const createCode = async (req, res)=>{
-  generateCode(res) 
-}
-
-const createRoomController = async  (req, res) => {
-    try {
-    
-      const{ name, zip, radius, code , location, deviceId,fcm_token }= req.body
-      if(!name, !zip, !radius, !code , !location.longitude, !deviceId,!fcm_token){
-        res.json({error:"Required fields are missing"})
-      }else{
-        YELP_CLIENT
-        .search({
-          term: "food",
-          longitude: location.longitude,
-          latitude: location.latitude ,
+  this.generateCode =(res)=>{
+    const code= Math.floor(10000 + Math.random() * 90000)
+   
+    createRoom.find({code:code})
+    .exec((err, doc)=>{
+      if(err){ 
+        console.log(1, error)
+        res.json({
+          error:err,
+          message:"Database error"
         })
-        .then(async(response) => {
-          var apiData = response.jsonBody;
-        
-          const obj ={
-            name,    
-            zip,  
-            radius,
-            code,
-            fcmTokenList:[fcm_token],
-            location: {
-              longitude: location.longitude,
-              latitude: location.latitude,
-            },
-            resturentData: apiData,
-            userList:[{name, deviceId , host:true}]
-          }
-          const Data =  new createRoom(obj);
-          const Room= await Data.save();
-        
-          const responce = {
-            message: "create",
-            error: false,
-            data: Room,
-          };
-          res.json(responce);
-        })
-        .catch((error) => {
-          const responce = {
-            error: true,
-            error: error,
-          };
-          res.json(responce);
-        
-        });
-
       }
-    
-    } catch (error) {
-      console.log("errror", error)
-      const responce = {
-        error: true,
-        error: error,
-      };
-      res.json(responce);
-    }
+      else if (doc && doc[0]){
+        console.log(2, doc)
+        generateCode(res)
+      }else{
+        res.json({code:code})
+      }
+    })
+  
+  
+  }
+  this.createCode = async (req, res)=>{
+    generateCode(res) 
   }
 
- const joinRoomController = async (req, res) => {
+  this.createRoomController = async  (req, res) => {
+    console.log(req.query)
+ 
+    // try {
+    
+    //   const{ name, zip, radius, code , location, deviceId,fcm_token }= req.body
+    //   if(!name, !zip, !radius, !code , !location.longitude, !deviceId,!fcm_token){
+    //     res.json({error:"Required fields are missing"})
+    //   }else{
+    //     YELP_CLIENT
+    //     .search({
+    //       term: "food",
+    //       longitude: location.longitude,
+    //       latitude: location.latitude ,
+    //     })
+    //     .then(async(response) => {
+    //       var apiData = response.jsonBody;
+        
+    //       const obj ={
+    //         name,    
+    //         zip,  
+    //         radius,
+    //         code,
+    //         fcmTokenList:[fcm_token],
+    //         location: {
+    //           longitude: location.longitude,
+    //           latitude: location.latitude,
+    //         },
+    //         resturentData: apiData,
+    //         userList:[{name, deviceId , host:true}]
+    //       }
+          
+    //       const Data =  new createRoom(obj);
+    //       const Room= await Data.save();
+
+
+    //       // create a socket room so that only the room person can get that message
+    //       io.on("connection", async (socket) => {
+    //         const responce = {
+    //           message: "create",
+    //           error: false,
+    //           data: Room,
+    //         };
+    //         socket.join(Room._id);
+          
+    //         // and then later
+    //         io.to(Room).emit(response);
+    //         res.json(responce);
+    //       });
+        
+         
+    //     })
+    //     .catch((error) => {
+    //       const responce = {
+    //         error: true,
+    //         error: error,
+    //       };
+    //       res.json(responce);
+        
+    //     });
+
+    //   }
+    
+    // } catch (error) {
+    //   console.log("errror", error)
+    //   const responce = {
+    //     error: true,
+    //     error: error,
+    //   };
+    //   res.json(responce);
+    // }
+  }
+
+ this.joinRoomController = async (req, res) => {
   const{name, code,  deviceId, fcm_token}= req.body;
    
     try{
@@ -125,7 +139,14 @@ const createRoomController = async  (req, res) => {
             fcmTokenList.push(fcm_token)
 
             let updateRoom= await createRoom.updateOne({code: code}, { userList, fcmTokenList});
-            
+            // io.on("connection", async (socket) => {
+            //   socket.join(Room._id);
+          
+            //   // and then later
+            //   io.to(Room).emit(response);
+     
+            // });
+          
             if(updateRoom.acknowledged){
             sendNotification({
                 title: name+ " joined the room!",
@@ -156,7 +177,7 @@ const createRoomController = async  (req, res) => {
   }
 
 
-  const getNewJoinee = async (req, res)=>{
+this.getNewJoinee = async (req, res)=>{
     // res.send("hello from get new joinee")
     // console.log("get ")
     // get code and session id check if the room exist
@@ -213,7 +234,7 @@ const createRoomController = async  (req, res) => {
     // on client side compare both arrays and show the notfication toast of the new joinee
   }
 
-  const isAllRecordMatch =async(req,res)=>{
+this.isAllRecordMatch =async(req,res)=>{
     //on client side call a timer after 5secs call this api
     // get the sessionid from the req
     // check if all the elements if the match array have same restaurant id then show a status match and return that object to the client side 
@@ -260,7 +281,7 @@ const createRoomController = async  (req, res) => {
     // else return false
   }
 
-  const matchLike= async (req, res)=>{
+this.matchLike= async (req, res)=>{
     //get the object and userid and session id or code from request
     const{roomId, deviceId, restaurant}= req.body;
    
@@ -306,7 +327,7 @@ const createRoomController = async  (req, res) => {
   }
 
   
-  const leaveRoom = async (req,res)=>{
+this.leaveRoom = async (req,res)=>{
     const{roomId, deviceId, fcmToken}= req.body;
     if (!roomId || !deviceId || !fcmToken) {
       res.json({"error":"Please Fill The Input Correctly"});
@@ -362,8 +383,6 @@ const createRoomController = async  (req, res) => {
     }
     
   }
+}
 
- 
-  module.exports={
-    createRoomController, joinRoomController, getNewJoinee, matchLike, isAllRecordMatch, createCode, leaveRoom
-  }
+module.exports = socketController
