@@ -5,7 +5,6 @@ var mongoose = require("mongoose");
 const config = require("./config");
 const { Server } = require("socket.io")
 const Room = require("./models/room");
-const router= express.Router();
 const { sendNotification } = require("./controller/notification")
 const yelp = require("yelp-fusion");
 
@@ -15,7 +14,7 @@ const io = new Server(server);
 
 const YELP_CLIENT = yelp.client(config.YELP_KEY );
 
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 3000;
 app.get("/", (req, res) => {
   res.send("hello world");
 })
@@ -304,17 +303,8 @@ io.on("connection", socket => {
             // update record in  db
             let updateRoom = await Room.updateOne({ _id: roomId }, { matchList: result.matchList });
             if (updateRoom.acknowledged) {
-              //  res.json({
-              //    data:result,
-              //    error:false
-              //  })
               socket.emit("recordMatch" + roomId, { result })
             }
-
-
-            // res.json({found, result})
-
-
           }
         }
       }
