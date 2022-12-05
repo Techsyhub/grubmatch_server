@@ -246,12 +246,7 @@ mongoose
 
   })
 
-io.on("connection", socket => {
-  console.log("a user connected")
-
-
-
-  const generateCode = (data) => {
+  const generateCode = (req, res) => {
 
     const code = Math.floor(10000 + Math.random() * 90000)
     console.log("run", Room)
@@ -261,19 +256,21 @@ io.on("connection", socket => {
           console.log(err)
         }
         else if (doc && doc[0]) {
-          generateCode(data)
+          generateCode(req, res)
         }
         else {
-
-          socket.emit("getCode" + data, code)
+          res.json({code })
         }
       })
   }
-  socket.on("createCode", data => {
-    generateCode(data)
+
+
+  app.post("/createCode", async(req,res)=>{
+    generateCode(req, res)
   })
 
-
+io.on("connection", socket => {
+  console.log("a user connected")
 
   socket.on("likeCard", async (data) => {
     // like the card and check if all records match then broadcast the event "allRecordMatch"
