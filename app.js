@@ -265,7 +265,7 @@ mongoose
   }
 
 
-  app.post("/createCode", async(req,res)=>{
+  app.get("/createCode", async(req,res)=>{
     generateCode(req, res)
   })
 
