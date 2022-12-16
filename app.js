@@ -14,7 +14,7 @@ const io = new Server(server);
 
 const YELP_CLIENT = yelp.client(config.YELP_KEY );
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 app.get("/", (req, res) => {
   res.send("hello world");
 })
@@ -62,6 +62,9 @@ mongoose
 
             const Data = new Room(obj);
             const roomData = await Data.save();
+            // socket.on('create', function(roomData) {
+            //   socket.join(roomDatsa);
+            // });
 
             const responce = {
               message: "create",
@@ -70,6 +73,8 @@ mongoose
             };
 
             res.json(responce);
+
+
           })
           .catch((error) => {
             console.log(error)
@@ -135,15 +140,16 @@ mongoose
               //   io.to(Room).emit(response);
 
               // });
-
+            
+              console.log("update Room ______", updateRoom)
               if (updateRoom.acknowledged) {
                 sendNotification({
                   title: name + " joined the room!",
-                  fcmTokenList: fcmTokenList
-                }, () => {
-                  result.userList = userList;
-                  res.json({
-                    message: "Join Room Successfully",
+                   fcmTokenList: fcmTokenList 
+                  },
+                   () => { result.userList = userList; 
+                    res.json({
+                       message: "Join Room Successfully",
                     data: result,
                     error: false
                   })
@@ -166,8 +172,9 @@ mongoose
   })
 
   app.post("/leaveRoom", async (req, res) => {
-    const { roomId, deviceId, fcmToken } = req.body;
-    if (!roomId || !deviceId || !fcmToken) {
+    const { roomId, deviceId, fcm_token } = req.body;
+    console.log(req.body)
+    if (!roomId || !deviceId || !fcm_token) {
       res.json({ "error": "Please Fill The Input Correctly" });
     } else {
       let result = await Room.findById(roomId);
@@ -198,17 +205,28 @@ mongoose
 
         }
         let matchList = result.matchList.splice(1, leftUserIndex)
-        let fcmTokenList = result.fcmTokenList.filter(item => item !== fcmToken)
+        let fcmTokenList = result.fcmTokenList.filter(item => item !== fcm_token)
 
         console.log(matchList)
         Room.update({ _id: roomId }, { userList: userList, matchList: matchList, fcmTokenList: fcmTokenList })
           .exec((err, doc) => {
             console.log({ doc, err })
             if (doc) {
+              // sendNotification({
+              //   title: name + " joined the room!",
+              //    fcmTokenList: fcmTokenList 
+              //   },
+              //    () => { result.userList = userList; 
+              //     res.json({
+              //        message: "Join Room Successfully",
+              //     data: result,
+              //     error: false
+              //   })
+              // })
               sendNotification({
                 title: leftUser + " left the room!",
                 text: leftUser + " left the room!",
-                fcmTokenList: result.fcmTokenList.toString()
+                fcmTokenList: result.fcmTokenList
               }, () => {
                 res.json({ message: "you left the room" })
               })
@@ -230,10 +248,11 @@ mongoose
         throw "Please Fill The Input Correctly"
       } else {
         let result = await Room.findById(roomId);
+        console.log({expire:false, room:{data:result}})
         if (!result) {
          res.json({expire:true})
         }else{
-          res.json({expire:false, room:result})
+          res.json({expire:false, room:{data:result}})
         }
     }
     } catch (error) {
@@ -270,9 +289,36 @@ mongoose
   })
 
 io.on("connection", socket => {
-  console.log("a user connected")
+  
+  console.log("a user connected", socket.id)
+
+  socket.on("setup", (room) => {
+    socket.join(room._id);
+    console.log("socket setup call user connected")
+    socket.emit("connected");
+    // const clients= await io.in(room._id).fetchSockets()
+    // console.log("client=====",clients)
+  });
+
+
+  socket.on("joinRoom", (room) => {
+    socket.join(room._id);
+    socket.emit("connected");
+    console.log("User Joined Room: " + room);
+    // const clients= await io.in(room._id).fetchSockets()
+    // console.log("client=====",clients)
+    io.in(room._id).emit("newJoinee",`${room.joineeName} has joined the room!`)
+  });
+
+  socket.on("leaveRoom", (room) => {
+    socket.leave(room._id);
+    console.log("User left Room: " + room);
+    io.in(room._id).emit("newleftee",`${room.lefteeName} has left the room!`)
+
+  });
 
   socket.on("likeCard", async (data) => {
+    
     // like the card and check if all records match then broadcast the event "allRecordMatch"
     const { roomId, deviceId, restaurant } = data;
     try {
@@ -285,24 +331,75 @@ io.on("connection", socket => {
         if (!result) {
           throw "The session has been expired"
         } else {
-          //search user in match list if found update record if not found add record
+          
           let found = false
-          for (const iterator of result.matchList) {
-            console.log(iterator, deviceId)
+          let array = result.matchList.slice(0)
+          
+        //search user in match list if found update record if not found add record
+          for (const iterator of array) {
+            // console.log(iterator, deviceId)
             if (iterator.deviceId === deviceId) {
               iterator.restaurant = restaurant
               found = true
             }
-          }
+          }         
           if (!found) {
-            result.matchList.push({ deviceId, restaurant })
-          } else {
+           array.push({ deviceId, restaurant })
+          //  console.log("araat---------",array )
+          } 
+
+          // now check if all the elements in array have liked the same restaurant
+          // if yes then emit even record match 
+          // update record in db 
+          // let isSame = false
+          // let selectedRestaurant={}
+       let isSame=   array.every(val=>val.restaurant.id === restaurant.id)
+      //  console.log(temp)
+          // for (const iterator of array) {
+          //   // console.log(iterator.restaurant.id, restaurant.id)
+          //   if (iterator.restaurant.id === restaurant.id) {
+          //    isSame = true
+          //    selectedRestaurant=iterator
+          //    console.log("same")
+          //    break
+          //   }
+          // }   
+        
+
+          // else {
+           
+
+            // console.log(roomId)
             // update record in  db
-            let updateRoom = await Room.updateOne({ _id: roomId }, { matchList: result.matchList });
+            let updateRoom = await Room.updateOne({ _id: roomId }, { matchList: array });
+            //  console.log("1111", isSame, array.length, updateRoom.acknowledged)
             if (updateRoom.acknowledged) {
-              socket.emit("recordMatch" + roomId, { result })
+              if(isSame && array.length>1){
+
+                // for (const iterator of array) {
+              
+                  // let event= "recordMatch" + roomId
+                  // console.log("evetn_____",event)
+                  // socket.emit(event, { result })
+                  // socket.broadcast.to(event).emit( {result} );
+                  // io.in(roomId).emit({result}); 
+                  // if (iterator.restaurant.id !== restaurant.id) {
+                  //  isSame = false
+                  // }
+                // }   
+                // console.log("updateRoom._id",roomId, result)
+                // io.to(roomId).emit("match",restaurant)// work for only client
+                io.in(roomId).emit("match",restaurant)// all client in room include sender
+                console.log("result=====", restaurant)
+                // const clients= await io.in(roomId).fetchSockets()
+                // console.log("client=====",clients)
+                // console.log("socket rooms",roomId, socket.rooms)
+                // socket.on("typing", (room) => socket.in(room).emit("typing"));
+            
+              }
+              
             }
-          }
+          // }
         }
       }
 
