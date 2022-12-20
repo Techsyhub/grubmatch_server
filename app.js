@@ -302,17 +302,28 @@ io.on("connection", socket => {
 
 
   socket.on("joinRoom", (room) => {
-    socket.join(room._id);
+    socket.join(room.data._id);
     socket.emit("connected");
-    console.log("User Joined Room: " + room);
+    console.log("User Joined Room: " + Object.keys(room));
     // const clients= await io.in(room._id).fetchSockets()
-    // console.log("client=====",clients)
-    io.in(room._id).emit("newJoinee",`${room.joineeName} has joined the room!`)
+    // console.log("joinnee=====", room.joineeName)
+    io.in(room.data._id).emit("newJoinee",`${room.joineeName} has joined the room!`)
   });
 
+  //this function will trigger from splash screen 
+  //when user is already present in database but need to rejoin socket
+
+  socket.on("joinAgain", (room) => {
+    socket.join(room._id);
+    socket.emit("connected");
+    console.log("User Joined again Room: " + Object.keys(room),room.joineeName);
+  
+  });
+
+  
   socket.on("leaveRoom", (room) => {
     socket.leave(room._id);
-    console.log("User left Room: " + room);
+    console.log("User left Room: " +  JSON.stringify(room));
     io.in(room._id).emit("newleftee",`${room.lefteeName} has left the room!`)
 
   });
@@ -391,9 +402,9 @@ io.on("connection", socket => {
                 // io.to(roomId).emit("match",restaurant)// work for only client
                 io.in(roomId).emit("match",restaurant)// all client in room include sender
                 console.log("result=====", restaurant)
-                // const clients= await io.in(roomId).fetchSockets()
-                // console.log("client=====",clients)
-                // console.log("socket rooms",roomId, socket.rooms)
+                const clients= await io.in(roomId).fetchSockets()
+                console.log("client=====",clients)
+                console.log("socket rooms",roomId, socket.rooms)
                 // socket.on("typing", (room) => socket.in(room).emit("typing"));
             
               }
