@@ -14,7 +14,7 @@ const io = new Server(server);
 
 const YELP_CLIENT = yelp.client(config.YELP_KEY );
 
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3000;
 app.get("/", (req, res) => {
   res.send("hello world");
 })
